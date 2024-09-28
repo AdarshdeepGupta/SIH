@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Bus Tracking</title>
+    <style>
+        #map {
+            height: 80vh;
+            width: 100%;
+        }
+        #controls {
+            margin: 10px 0;
+            display: flex;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+</head>
+<body>
+    <h1 style="text-align: center;">Real-Time Bus Tracking</h1>
+    <div id="map"></div>
+    <div id="controls">
+        <button onclick="fetchRealTimeData()">Fetch Real-Time Data</button>
+    </div>
+    <script>
+        let map;
+        let busMarkers = [];
+
+        // Initialize the map
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 28.6139, lng: 77.209 },
+                zoom: 12
+            });
+
+            // Fetch initial real-time data
+            fetchRealTimeData();
+        }
+
+        // Fetch real-time bus data from backend
+        async function fetchRealTimeData() {
+            try {
+                const response = await fetch('/api/real-time-buses');
+                const data = await response.json();
+                updateBusPositions(data);
+            } catch (error) {
+                console.error('Error fetching real-time data:', error);
+            }
+        }
+
+        // Update bus markers on the map
+        function updateBusPositions(buses) {
+            // Clear existing markers
+            busMarkers.forEach(marker => marker.setMap(null));
+            busMarkers = [];
+
+            // Add new bus markers
+            buses.forEach(bus => {
+                const marker = new google.maps.Marker({
+                    position: { lat: bus.latitude, lng: bus.longitude },
+                    map: map,
+                    icon: 'https://maps.google.com/mapfiles/kml/shapes/bus.png',
+                    title: `Bus ${bus.id}`
+                });
+                busMarkers.push(marker);
+            });
+        }
+    </script>
+</body>
+</html>
