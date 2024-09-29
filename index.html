@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Bus Tracking</title>
+    <title>Bus Route Optimization Prototype</title>
     <style>
         #map {
             height: 80vh;
@@ -27,17 +27,22 @@
             background-color: #0056b3;
         }
     </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+    <!-- Load the Google Maps JavaScript API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCB9CYS18xEb3YGwPJRohxWCUfRBtsKkuI&callback=initMap" async defer></script>
 </head>
 <body>
-    <h1 style="text-align: center;">Real-Time Bus Tracking</h1>
+    <h1 style="text-align: center;">Bus Route Optimization Prototype</h1>
+    <!-- Container for the map -->
     <div id="map"></div>
+    <!-- Control buttons for the prototype -->
     <div id="controls">
-        <button onclick="fetchRealTimeData()">Fetch Real-Time Data</button>
+        <button onclick="fetchBusData()">Fetch Bus Data</button>
+        <button onclick="fetchStopsData()">Fetch Stops Data</button>
     </div>
     <script>
         let map;
         let busMarkers = [];
+        let stopMarkers = [];
 
         // Initialize the map
         function initMap() {
@@ -45,37 +50,69 @@
                 center: { lat: 28.6139, lng: 77.209 },
                 zoom: 12
             });
-
-            // Fetch initial real-time data
-            fetchRealTimeData();
         }
 
-        // Fetch real-time bus data from backend
-        async function fetchRealTimeData() {
+        // Fetch bus data from the server
+        async function fetchBusData() {
             try {
-                const response = await fetch('/api/real-time-buses');
-                const data = await response.json();
-                updateBusPositions(data);
+                const response = await fetch('/api/buses');
+                const buses = await response.json();
+                console.log('Bus data:', buses);
+                displayBusMarkers(buses);
             } catch (error) {
-                console.error('Error fetching real-time data:', error);
+                console.error('Error fetching bus data:', error.message);
             }
         }
 
-        // Update bus markers on the map
-        function updateBusPositions(buses) {
-            // Clear existing markers
+        // Display bus positions as markers with bus icons
+        function displayBusMarkers(buses) {
+            // Clear existing bus markers
             busMarkers.forEach(marker => marker.setMap(null));
             busMarkers = [];
 
-            // Add new bus markers
             buses.forEach(bus => {
                 const marker = new google.maps.Marker({
                     position: { lat: bus.latitude, lng: bus.longitude },
                     map: map,
-                    icon: 'https://maps.google.com/mapfiles/kml/shapes/bus.png',
-                    title: `Bus ${bus.id}`
+                    title: `Bus ID: ${bus.id}`,
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/kml/shapes/bus.png', // Bus icon URL
+                        scaledSize: new google.maps.Size(32, 32)
+                    }
                 });
                 busMarkers.push(marker);
+            });
+        }
+
+        // Fetch stops data from the server
+        async function fetchStopsData() {
+            try {
+                const response = await fetch('/api/stops');
+                const stops = await response.json();
+                console.log('Stops data:', stops);
+                displayStopMarkers(stops);
+            } catch (error) {
+                console.error('Error fetching stops data:', error.message);
+            }
+        }
+
+        // Display stop markers
+        function displayStopMarkers(stops) {
+            // Clear existing stop markers
+            stopMarkers.forEach(marker => marker.setMap(null));
+            stopMarkers = [];
+
+            stops.forEach(stop => {
+                const marker = new google.maps.Marker({
+                    position: { lat: stop.latitude, lng: stop.longitude },
+                    map: map,
+                    title: stop.name,
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png', // Custom icon for stops
+                        scaledSize: new google.maps.Size(16, 16)
+                    }
+                });
+                stopMarkers.push(marker);
             });
         }
     </script>
